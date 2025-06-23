@@ -165,4 +165,5 @@ int display() {
     system("cls");
     Sleep(800);
     return 2;  // SALE DEL PROGRAMA
+    // Versión ligera sin cambios visibles
 }
