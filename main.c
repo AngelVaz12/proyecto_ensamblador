@@ -1,71 +1,145 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <conio.h>
+#include <stdio.h>      // Para printf
+#include <stdlib.h>     // Para system("cls")
+#include <Windows.h>    // Para Sleep y Beep
+#include <conio.h>      // Para getch()
 
-#define FILAS 10
-#define COLUMNAS 10
+#define REN 16
+#define COL 16
 
-// FUNCIONES DEFINIDAS EN ENSAMBLADOR (.asm)
-extern void _mostrarLaberinto(char* lab, int filas, int columnas);
-extern int _puedeMover(char* lab, int filas, int columnas, int x, int y);
+extern int mover_personaje(char *mapa, int ren, int col, char tecla);
 
-// MATRIZ DEL LABERINTO (10x10)
-char laberinto[FILAS][COLUMNAS] = {
-    "##########",
-    "#P     # #",
-    "# ### #  #",
-    "#   # ## #",
-    "### #    #",
-    "#   #####X",
-    "# #      #",
-    "# ###### #",
-    "#        #",
-    "##########"
-};
+void pantalla_bienvenida();
+int menu();
+int display();
 
-int jugadorX = 1, jugadorY = 1;
+int main() {
+    int op = 0;
+    SetConsoleOutputCP(CP_UTF8);
+    pantalla_bienvenida();  // MOSTRAR BANNER
 
-// FUNCION PARA MOVER AL JUGADOR
-void mover(int dx, int dy) {
-    int nuevaX = jugadorX + dx;
-    int nuevaY = jugadorY + dy;
-
-    if (_puedeMover(&laberinto[0][0], FILAS, COLUMNAS, nuevaX, nuevaY)) {
-        if (laberinto[nuevaX][nuevaY] == 'X') {
-            system("cls");
-            laberinto[jugadorX][jugadorY] = ' ';
-            jugadorX = nuevaX;
-            jugadorY = nuevaY;
-            laberinto[jugadorX][jugadorY] = 'P';
-            _mostrarLaberinto(&laberinto[0][0], FILAS, COLUMNAS);
-            printf("¡Felicidades! Has llegado a la salida.\n");
-            exit(0);
+    do {
+        if (op != 1) {
+            op = menu();
         }
 
-        laberinto[jugadorX][jugadorY] = ' ';
-        jugadorX = nuevaX;
-        jugadorY = nuevaY;
-        laberinto[jugadorX][jugadorY] = 'P';
-    }
-}
+        if (op != 2) {
+            op = display();
+        }
 
-// FUNCION PRINCIPAL
-int main() {
-    char tecla;
+    } while (op != 2);
 
-    while (1) {
-        system("cls");
-        _mostrarLaberinto(&laberinto[0][0], FILAS, COLUMNAS);
-        printf("Usa W/A/S/D para moverte. Presiona 'q' para salir.\n");
-
-        tecla = _getch();
-
-        if (tecla == 'w') mover(-1, 0);
-        else if (tecla == 's') mover(1, 0);
-        else if (tecla == 'a') mover(0, -1);
-        else if (tecla == 'd') mover(0, 1);
-        else if (tecla == 'q') break;
-    }
+    printf("\n\n\n\n    ~~~~~ HASTA PRONTO ~~~~~");
+    Sleep(1000);
+    system("cls");
 
     return 0;
+}
+
+//----------------------------------------------------------------------------------
+
+void pantalla_bienvenida() {
+    system("cls");
+    printf("██╗░░░░░░█████╗░██████╗░███████╗██████╗░██╗███╗░░██╗████████╗░█████╗░\n");
+    printf("██║░░░░░██╔══██╗██╔══██╗██╔════╝██╔══██╗██║████╗░██║╚══██╔══╝██╔══██╗\n");
+    printf("██║░░░░░███████║██████╦╝█████╗░░██████╔╝██║██╔██╗██║░░░██║░░░██║░░██║\n");
+    printf("██║░░░░░██╔══██║██╔══██╗██╔══╝░░██╔══██╗██║██║╚████║░░░██║░░░██║░░██║\n");
+    printf("███████╗██║░░██║██████╦╝███████╗██║░░██║██║██║░╚███║░░░██║░░░╚█████╔╝\n");
+    printf("╚══════╝╚═╝░░╚═╝╚═════╝░╚══════╝╚═╝░░╚═╝╚═╝╚═╝░░╚══╝░░░╚═╝░░░░╚════╝░\n\n");
+    printf("Presiona ENTER para comenzar...\n");
+    getchar();
+}
+
+//----------------------------------------------------------------------------------
+
+int menu() {
+    int resp = 0;
+
+    system("cls");
+
+    printf("╔══════════════════════════════════════╗\n");
+    printf("║          JUEGO DEL LABERINTO         ║\n");
+    printf("╠══════════════════════════════════════╣\n");
+    printf("║  1. Empezar                          ║\n");
+    printf("║  2. Salir                            ║\n");
+    printf("╚══════════════════════════════════════╝\n");
+    printf("Seleccione una opción: ");
+    
+    fflush(stdin);
+    scanf("%d", &resp);
+
+    Sleep(1000);
+    system("cls");
+
+    return resp;
+}
+
+//----------------------------------------------------------------------------------
+
+int display() {
+    char tecla;
+
+    char mapa[REN][COL] = {
+        {'#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'},
+        {'#','P','.','.','.','.','.','.','.','.','.','.','.','.','.','#'},
+        {'#','.','#','#','#','.','#','.','#','#','#','#','#','#','.','#'},
+        {'#','.','.','.','#','.','#','.','.','.','.','.','.','#','.','#'},
+        {'#','#','#','.','#','.','#','#','#','#','#','#','.','#','.','#'},
+        {'#','.','#','.','.','.','.','.','.','.','.','#','.','#','.','#'},
+        {'#','.','#','#','#','#','#','#','#','#','.','#','.','#','.','#'},
+        {'#','.','.','.','.','.','.','.','#','#','.','#','.','#','.','#'},
+        {'#','#','#','#','#','#','#','.','#','.','.','#','.','#','.','#'},
+        {'#','.','.','.','.','.','#','.','#','#','#','#','.','#','.','#'},
+        {'#','.','#','#','#','.','#','.','.','.','.','.','.','#','.','#'},
+        {'#','.','#','.','.','.','#','#','#','#','#','#','#','#','.','#'},
+        {'#','.','#','.','#','.','.','.','.','.','.','.','.','.','.','#'},
+        {'#','.','#','.','#','#','#','#','#','#','#','#','#','#','#','#'},
+        {'#','.','.','.','.','.','.','.','.','.','.','.','.','.','X','#'},
+        {'#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'}
+    };
+
+
+    do {
+        for (int i = 0; i < REN; i++) {
+            for (int j = 0; j < COL; j++) {
+                printf(" %c", mapa[i][j]);
+            }
+            printf("\n");
+        }
+        printf("\n||| Usa W/A/S/D para moverte |||");
+        printf("\n    Presiona r para reiniciar");
+        printf("\n      Presiona e para salir\n\n");
+
+        if (mapa[14][14] == 'P') {
+            Sleep(800);
+            system("cls");
+            printf("\n\n\n\n    ~~~~~ FELICIDADES. GANASTE! ~~~~~");
+            Sleep(1500);
+            system("cls");
+            return 0;
+        }
+
+        tecla = getch();
+
+        if (tecla == 'w' || tecla == 'a' || tecla == 's' || tecla == 'd') {
+            Beep(750, 50);
+        } else if (tecla == 'r') {
+            Beep(500, 150);
+        } else if (tecla == 'e') {
+            Beep(1000, 150);
+        }
+
+        if (tecla == 'r') {
+            system("cls");
+            Sleep(800);
+            return 1;
+        }
+
+        mover_personaje((char *)mapa, REN, COL, tecla);
+        system("cls");
+
+    } while (tecla != 'e');
+
+    system("cls");
+    Sleep(800);
+    return 2;
 }

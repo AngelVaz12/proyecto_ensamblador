@@ -1,80 +1,107 @@
 section .text
-global _mostrarLaberinto
-global _puedeMover
-extern _printf
+    global mover_personaje
 
-_mostrarLaberinto:
-    push ebp
-    mov ebp, esp
+mover_personaje:
+    ; rcx   ; PUNTERO A LA MATRIZ
+    ; dx    ; RENGLONES
+    ; r8    ; COLUMNAS
+    ; r9    ; TECLA PRESIONADA
 
-    mov eax, [ebp+8]   ; lab
-    mov ecx, [ebp+12]  ; filas
-    mov edx, [ebp+16]  ; columnas
+    push rbx
+    push rsi
+    push rdi
+    push rbp
 
-    push edi
-    mov edi, eax
+    mov rsi, rcx      ; rsi = puntero al mapa
+    mov rbx, 0        ; índice lineal
+    imul rdx, r8      ; rdx = ren * col → total de elementos
+    mov rbp, r9       ; tecla ingresada
 
-.filas_loop:
-    push ecx
-    mov ecx, edx
+.buscar_P:
+    cmp rbx, rdx
+    jge .fin
 
-.columnas_loop:
-    mov al, [edi]
-    movzx eax, al
-    push eax
-    push format
-    call _printf
-    add esp, 8
-    inc edi
-    loop .columnas_loop
+    mov al, [rsi + rbx]
+    cmp al, 'P'
+    je .avanzar
 
-    push newline
-    call _printf
-    add esp, 4
+    inc rbx
+    jmp .buscar_P
 
-    pop ecx
-    loop .filas_loop
+.avanzar:
+    cmp rbp, 'd'
+    je .derecha
 
-    pop edi
-    pop ebp
+    cmp rbp, 'a'
+    je .izquierda
+
+    cmp rbp, 'w'
+    je .arriba
+
+    cmp rbp, 's'
+    je .abajo
+
+    jmp .fin
+
+.derecha:
+    inc rbx
+    mov al, [rsi + rbx]
+    cmp al, '#'
+    je .fin
+
+    mov al, 'P'
+    mov [rsi + rbx], al
+
+    dec rbx
+    mov al, '.'
+    mov [rsi + rbx], al
+    jmp .fin
+
+.izquierda:
+    dec rbx
+    mov al, [rsi + rbx]
+    cmp al, '#'
+    je .fin
+
+    mov al, 'P'
+    mov [rsi + rbx], al
+
+    inc rbx
+    mov al, '.'
+    mov [rsi + rbx], al
+    jmp .fin
+
+.arriba:
+    sub rbx, r8
+    mov al, [rsi + rbx]
+    cmp al, '#'
+    je .fin
+
+    mov al, 'P'
+    mov [rsi + rbx], al
+
+    add rbx, r8
+    mov al, '.'
+    mov [rsi + rbx], al
+    jmp .fin
+
+.abajo:
+    add rbx, r8
+    mov al, [rsi + rbx]
+    cmp al, '#'
+    je .fin
+
+    mov al, 'P'
+    mov [rsi + rbx], al
+
+    sub rbx, r8
+    mov al, '.'
+    mov [rsi + rbx], al
+    jmp .fin
+
+.fin:
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rbx
     ret
-
-_puedeMover:
-    push ebp
-    mov ebp, esp
-
-    mov eax, [ebp+8]    ; lab
-    mov ecx, [ebp+12]   ; filas
-    mov edx, [ebp+16]   ; columnas
-    mov esi, [ebp+20]   ; x
-    mov edi, [ebp+24]   ; y
-
-    cmp esi, 0
-    jl .no
-    cmp esi, ecx
-    jge .no
-    cmp edi, 0
-    jl .no
-    cmp edi, edx
-    jge .no
-
-    imul esi, edx
-    add esi, edi
-    add eax, esi
-    mov bl, [eax]
-    cmp bl, '#'
-    je .no
-
-    mov eax, 1
-    jmp .end
-
-.no:
-    mov eax, 0
-
-.end:
-    pop ebp
-    ret
-
-section .data
-format db "%c", 0
-newline db 10, 0
