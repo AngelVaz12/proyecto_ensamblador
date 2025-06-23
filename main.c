@@ -1,12 +1,12 @@
-#include <stdio.h>      // Para printf
-#include <stdlib.h>     // Para system("cls")
-#include <Windows.h>    // Para Sleep y Beep
-#include <conio.h>      // Para getch()
+#include <stdio.h>
+#include <stdlib.h>
+#include <Windows.h>
+#include <conio.h>
 
 #define REN 16
 #define COL 16
 
-extern int mover_personaje(char *mapa, int ren, int col, char tecla);
+extern int funciones_laberinto(char *mapa, int ren, int col, char tecla);
 
 void pantalla_bienvenida();
 int menu();
@@ -15,7 +15,7 @@ int display();
 int main() {
     int op = 0;
     SetConsoleOutputCP(CP_UTF8);
-    pantalla_bienvenida();  // MOSTRAR BANNER
+    pantalla_bienvenida();
 
     do {
         if (op != 1) {
@@ -36,11 +36,8 @@ int main() {
     printf("╚═╝░░╚═╝╚═╝░░╚═╝╚═════╝░░░░╚═╝░░░╚═╝░░╚═╝      ╚══════╝░╚═════╝░╚══════╝░╚═════╝░░╚════╝░\n");
     Sleep(1000);
     system("cls");
-
     return 0;
 }
-
-//----------------------------------------------------------------------------------
 
 void pantalla_bienvenida() {
     system("cls");
@@ -54,13 +51,9 @@ void pantalla_bienvenida() {
     getchar();
 }
 
-//----------------------------------------------------------------------------------
-
 int menu() {
     int resp = 0;
-
     system("cls");
-
     printf("╔══════════════════════════════════════╗\n");
     printf("║          JUEGO DEL LABERINTO         ║\n");
     printf("╠══════════════════════════════════════╣\n");
@@ -68,17 +61,12 @@ int menu() {
     printf("║  2. Salir                            ║\n");
     printf("╚══════════════════════════════════════╝\n");
     printf("Seleccione una opción: ");
-    
     fflush(stdin);
     scanf("%d", &resp);
-
     Sleep(1000);
     system("cls");
-
     return resp;
 }
-
-//----------------------------------------------------------------------------------
 
 int display() {
     char tecla;
@@ -102,7 +90,6 @@ int display() {
         {'#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'}
     };
 
-
     do {
         for (int i = 0; i < REN; i++) {
             for (int j = 0; j < COL; j++) {
@@ -111,22 +98,8 @@ int display() {
             printf("\n");
         }
         printf("\n||| Usa W/A/S/D para moverte |||");
-        printf("\n    Presiona r para reiniciar");
-        printf("\n      Presiona e para salir\n\n");
-
-        if (mapa[14][14] == 'P') {
-            Sleep(800);
-            system("cls");
-            printf("░██████╗░░█████╗░███╗░░██╗░█████╗░░██████╗████████╗███████╗\n");
-            printf("██╔════╝░██╔══██╗████╗░██║██╔══██╗██╔════╝╚══██╔══╝██╔════╝\n");
-            printf("██║░░██╗░███████║██╔██╗██║███████║╚█████╗░░░░██║░░░█████╗░░\n");
-            printf("██║░░╚██╗██╔══██║██║╚████║██╔══██║░╚═══██╗░░░██║░░░██╔══╝░░\n");
-            printf("╚██████╔╝██║░░██║██║░╚███║██║░░██║██████╔╝░░░██║░░░███████╗\n");
-            printf("░╚═════╝░╚═╝░░╚═╝╚═╝░░╚══╝╚═╝░░╚═╝╚═════╝░░░░╚═╝░░░╚══════╝\n\n");
-            Sleep(1500);
-            system("cls");
-            return 0;
-        }
+        printf("\n        R para reiniciar");
+        printf("\n         E para salir\n\n");
 
         tecla = getch();
 
@@ -144,7 +117,22 @@ int display() {
             return 1;
         }
 
-        mover_personaje((char *)mapa, REN, COL, tecla);
+        int resultado = funciones_laberinto((char *)mapa, REN, COL, tecla);    
+
+        if (resultado == 1) {
+            Sleep(800);
+            system("cls");
+            printf("░██████╗░░█████╗░███╗░░██╗░█████╗░░██████╗████████╗███████╗\n");
+            printf("██╔════╝░██╔══██╗████╗░██║██╔══██╗██╔════╝╚══██╔══╝██╔════╝\n");
+            printf("██║░░██╗░███████║██╔██╗██║███████║╚█████╗░░░░██║░░░█████╗░░\n");
+            printf("██║░░╚██╗██╔══██║██║╚████║██╔══██║░╚═══██╗░░░██║░░░██╔══╝░░\n");
+            printf("╚██████╔╝██║░░██║██║░╚███║██║░░██║██████╔╝░░░██║░░░███████╗\n");
+            printf("░╚═════╝░╚═╝░░╚═╝╚═╝░░╚══╝╚═╝░░╚═╝╚═════╝░░░░╚═╝░░░╚══════╝\n\n");
+            Sleep(1500);
+            system("cls");
+            return 0;
+        }
+
         system("cls");
 
     } while (tecla != 'e');

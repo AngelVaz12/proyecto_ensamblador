@@ -1,107 +1,115 @@
 section .text
-    global mover_personaje
+    global funciones_laberinto       ; Hacemos pública la función para que sea visible desde C
 
-mover_personaje:
-    ; rcx   ; PUNTERO A LA MATRIZ
-    ; dx    ; RENGLONES
-    ; r8    ; COLUMNAS
-    ; r9    ; TECLA PRESIONADA
+funciones_laberinto:
+    ; rcx = puntero al mapa (char *mapa)
+    ; rdx = número de renglones
+    ; r8  = número de columnas
+    ; r9  = tecla presionada
 
+    ; GUARDAMOS REGISTROS QUE VAMOS A MODIFICAR
     push rbx
     push rsi
     push rdi
-    push rbp
 
-    mov rsi, rcx      ; rsi = puntero al mapa
-    mov rbx, 0        ; índice lineal
-    imul rdx, r8      ; rdx = ren * col → total de elementos
-    mov rbp, r9       ; tecla ingresada
+    ; INICIALIZACIONES
+    mov rsi, rcx      ; rsi = mapa (puntero base)
+    xor rbx, rbx      ; rbx = índice lineal, inicia en 0
+    imul rdx, r8      ; rdx = renglones * columnas (tamaño total del mapa)
+    mov dil, r9b      ; dil = tecla presionada (extraída del registro r9b → parte baja de r9)
 
-.buscar_P:
-    cmp rbx, rdx
-    jge .fin
+;-------------------------------
+; BUSCAR POSICIÓN DEL JUGADOR 'P'
+;-------------------------------
+buscar:
+    cmp rbx, rdx           ; ¿ya recorrimos todo el mapa?
+    jge fin                ; si sí, terminamos
 
-    mov al, [rsi + rbx]
-    cmp al, 'P'
-    je .avanzar
+    mov al, [rsi + rbx]    ; cargamos el valor del mapa en la posición rbx
+    cmp al, 'P'            ; ¿es la posición actual del jugador?
+    je mover               ; si sí, vamos a calcular el movimiento
 
-    inc rbx
-    jmp .buscar_P
+    inc rbx                ; si no, pasamos a la siguiente posición
+    jmp buscar             ; repetir
 
-.avanzar:
-    cmp rbp, 'd'
+;-------------------------------
+; IDENTIFICAR DIRECCIÓN A MOVER
+;-------------------------------
+mover:
+    mov rax, 0             ; rax será el desplazamiento
+    cmp dil, 'd'
     je .derecha
-
-    cmp rbp, 'a'
+    cmp dil, 'a'
     je .izquierda
-
-    cmp rbp, 'w'
+    cmp dil, 'w'
     je .arriba
-
-    cmp rbp, 's'
+    cmp dil, 's'
     je .abajo
-
-    jmp .fin
+    jmp fin                ; si no fue ninguna tecla válida, salir
 
 .derecha:
-    inc rbx
-    mov al, [rsi + rbx]
-    cmp al, '#'
-    je .fin
-
-    mov al, 'P'
-    mov [rsi + rbx], al
-
-    dec rbx
-    mov al, '.'
-    mov [rsi + rbx], al
-    jmp .fin
+    mov rax, 1             ; desplazamiento +1
+    jmp verificar
 
 .izquierda:
-    dec rbx
-    mov al, [rsi + rbx]
-    cmp al, '#'
-    je .fin
-
-    mov al, 'P'
-    mov [rsi + rbx], al
-
-    inc rbx
-    mov al, '.'
-    mov [rsi + rbx], al
-    jmp .fin
+    mov rax, -1            ; desplazamiento -1
+    jmp verificar
 
 .arriba:
-    sub rbx, r8
-    mov al, [rsi + rbx]
-    cmp al, '#'
-    je .fin
-
-    mov al, 'P'
-    mov [rsi + rbx], al
-
-    add rbx, r8
-    mov al, '.'
-    mov [rsi + rbx], al
-    jmp .fin
+    neg r8                 ; cambiamos signo para hacer -columnas
+    mov rax, r8            ; desplazamiento = -número de columnas
+    neg r8                 ; restauramos r8 a valor original
+    jmp verificar
 
 .abajo:
-    add rbx, r8
-    mov al, [rsi + rbx]
-    cmp al, '#'
-    je .fin
+    mov rax, r8            ; desplazamiento = número de columnas
+    jmp verificar
 
-    mov al, 'P'
-    mov [rsi + rbx], al
+;-------------------------------
+; VERIFICAR CASILLA DESTINO
+;-------------------------------
+verificar:
+    mov rdi, rbx           ; rdi = posición actual
+    add rdi, rax           ; rdi = nueva posición (destino)
+    mov al, [rsi + rdi]    ; leemos el carácter en el destino
 
-    sub rbx, r8
-    mov al, '.'
-    mov [rsi + rbx], al
-    jmp .fin
+    cmp al, '#'            ; ¿es una pared?
+    je fin                 ; si es pared, salir sin mover
 
-.fin:
-    pop rbp
-    pop rdi
-    pop rsi
-    pop rbx
-    ret
+    cmp al, 'X'            ; ¿es la meta?
+    je gano                ; si es la meta, ir a bloque de victoria
+
+    ; MOVIMIENTO NORMAL
+    mov byte [rsi + rdi], 'P'  ; colocamos 'P' en la nueva posición
+    mov byte [rsi + rbx], '.'  ; dejamos '.' en la posición anterior
+    jmp no_gano
+
+;-------------------------------
+; GANÓ EL JUGADOR
+;-------------------------------
+gano:
+    mov byte [rsi + rdi], 'P'  ; colocamos 'P' sobre la meta
+    mov byte [rsi + rbx], '.'  ; limpiamos posición anterior
+    mov eax, 1                 ; señalamos que ganó (valor de retorno)
+    jmp salir
+
+;-------------------------------
+; NO GANÓ → REGRESAMOS 0
+;-------------------------------
+no_gano:
+    xor eax, eax               ; eax = 0 (no ganó)
+
+;-------------------------------
+; FIN NORMAL (SIN MOVIMIENTO)
+;-------------------------------
+fin:
+    xor eax, eax               ; eax = 0 (por defecto, si no se mueve)
+
+;-------------------------------
+; SALIDA Y RESTAURACIÓN
+;-------------------------------
+salir:
+    pop rdi                    ; restaurar rdi
+    pop rsi                    ; restaurar rsi
+    pop rbx                    ; restaurar rbx
+    ret                        ; regresar a C
